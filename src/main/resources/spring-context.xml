@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="optionService" class="service.impl.OptionServiceImpl">
+        <constructor-arg value="/options.csv"/>
+    </bean>
+
+    <bean id="questionService" class="service.impl.QuestionServiceImpl">
+        <constructor-arg ref="optionService"/>
+        <constructor-arg value="/questions.csv"/>
+    </bean>
+
+    <bean id="outputService" class="service.impl.OutputServiceImpl">
+        <constructor-arg ref="questionService"/>
+    </bean>
+</beans>
