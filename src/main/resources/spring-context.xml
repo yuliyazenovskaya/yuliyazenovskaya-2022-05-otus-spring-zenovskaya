@@ -4,12 +4,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="optionService" class="service.impl.OptionServiceImpl">
-        <constructor-arg value="/options.csv"/>
-    </bean>
-
     <bean id="questionService" class="service.impl.QuestionServiceImpl">
-        <constructor-arg ref="optionService"/>
         <constructor-arg value="/questions.csv"/>
     </bean>
 

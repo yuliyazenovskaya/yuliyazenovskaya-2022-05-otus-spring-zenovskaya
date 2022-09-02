@@ -2,9 +2,9 @@ package service;
 
 import domain.Question;
 
-import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 
 public interface OutputService {
-    List<Question> printQuestions() throws IOException;
+    List<Question> printQuestions(PrintStream printStream);
 }

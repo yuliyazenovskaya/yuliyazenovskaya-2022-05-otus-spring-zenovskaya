@@ -2,11 +2,8 @@ package service.impl;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
-import common.Constants;
 import domain.Question;
-import service.OptionService;
 import service.QuestionService;
-import sun.applet.Main;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,45 +13,47 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QuestionServiceImpl implements QuestionService {
-    private final OptionService optionService;
     private final String questionsCsv;
-    private final List<Question> questions = new ArrayList<>();
 
-    public QuestionServiceImpl(OptionService optionService, String questionsCsv) {
-        this.optionService = optionService;
+    public QuestionServiceImpl(String questionsCsv) {
         this.questionsCsv = questionsCsv;
     }
 
     @Override
-    public List<Question> getQuestions() throws IOException {
-        readOptionsFromFile();
+    public List<Question> getQuestions() {
+        List<Question> questions = new ArrayList<>();
 
-        questions.forEach(question -> {
-            if (question.type.equals(Constants.SINGLE_SELECT_QUESTION_TYPE)
-                    || question.type.equals(Constants.MULTI_SELECT_QUESTION_TYPE)) {
-                try {
-                    question.options = optionService.getQuestionOptions(question.id);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        readQuestionsFromFile(questions);
+
         return questions;
     }
 
-    private void readOptionsFromFile() throws IOException {
-        InputStream inputStream = Main.class.getResourceAsStream(this.questionsCsv);
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build();
-        String[] str;
-        while ((str = csvReader.readNext()) != null) {
-            questions.add(new Question(
-                    Long.parseLong(str[0]),
-                    str[1],
-                    str[2]
-            ));
+    private List<Question> readQuestionsFromFile(List<Question> questions) {
+        InputStream inputStream = this.getClass().getResourceAsStream(this.questionsCsv);
+        try (
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build()
+                ) {
+            String[] str;
+            while ((str = csvReader.readNext()) != null) {
+                Question question = new Question(
+                        Long.parseLong(str[0]),
+                        str[1],
+                        str[2]
+                );
+                List<String> options = new ArrayList<>();
+                for (int i = 3; i < 9; i++) {
+                    if (str[i].equals("")) break;
+                    options.add(str[i]);
+                }
+                if (options.size() > 0) question.options = options;
+
+                questions.add(question);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        csvReader.close();
-        bufferedReader.close();
+
+        return questions;
     }
 }
