@@ -1,8 +1,8 @@
-import domain.Question;
+import ru.otus.spring.domain.Question;
 import org.junit.Assert;
 import org.junit.Test;
-import service.QuestionService;
-import service.impl.QuestionServiceImpl;
+import ru.otus.spring.service.QuestionService;
+import ru.otus.spring.service.impl.QuestionServiceImpl;
 
 import java.util.List;
 

@@ -1,9 +1,12 @@
-package service.impl;
+package ru.otus.spring.service.impl;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
-import domain.Question;
-import service.QuestionService;
+import ru.otus.spring.domain.Question;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Service;
+import ru.otus.spring.service.QuestionService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,10 +15,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
+@PropertySource("classpath:examine.properties")
 public class QuestionServiceImpl implements QuestionService {
     private final String questionsCsv;
 
-    public QuestionServiceImpl(String questionsCsv) {
+    public QuestionServiceImpl(@Value("${question.csv.path}") String questionsCsv) {
         this.questionsCsv = questionsCsv;
     }
 
@@ -41,13 +46,8 @@ public class QuestionServiceImpl implements QuestionService {
                         str[1],
                         str[2]
                 );
-                List<String> options = new ArrayList<>();
-                for (int i = 3; i < 9; i++) {
-                    if (str[i].equals("")) break;
-                    options.add(str[i]);
-                }
-                if (options.size() > 0) question.options = options;
-
+                parseOptions(str, question);
+                parseAnswers(str, question);
                 questions.add(question);
             }
         } catch (IOException e) {
@@ -55,5 +55,18 @@ public class QuestionServiceImpl implements QuestionService {
         }
 
         return questions;
+    }
+
+    private void parseOptions(String[] str, Question question) {
+        List<String> options = new ArrayList<>();
+        for (int i = 3; i < 9; i++) {
+            if (str[i].equals("")) break;
+            options.add(str[i]);
+        }
+        if (options.size() > 0) question.options = options;
+    }
+
+    private void parseAnswers(String[] str, Question question) {
+        question.answers = str[9];
     }
 }

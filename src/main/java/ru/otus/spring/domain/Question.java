@@ -1,4 +1,4 @@
-package domain;
+package ru.otus.spring.domain;
 
 import java.util.List;
 
@@ -8,6 +8,7 @@ public class Question {
     public String text;
 
     public List<String> options;
+    public String answers;
 
     public Question(long id, String type, String text) {
         this.id = id;
