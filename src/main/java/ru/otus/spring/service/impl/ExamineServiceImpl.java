@@ -63,7 +63,7 @@ public class ExamineServiceImpl implements ExamineService {
 
                 String answer = scanner.nextLine();
 
-                if (isAnswerRight(question, answer)) {
+                if (checkIsAnswerRight(question, answer)) {
                     rightAnswers.getAndIncrement();
                 }
             });
@@ -74,7 +74,7 @@ public class ExamineServiceImpl implements ExamineService {
         return 0;
     }
 
-    private boolean isAnswerRight(Question question, String answer) {
+    private boolean checkIsAnswerRight(Question question, String answer) {
         if (question.type.equals(Constants.MULTI_SELECT_QUESTION_TYPE)) {
 
             return Arrays.equals(

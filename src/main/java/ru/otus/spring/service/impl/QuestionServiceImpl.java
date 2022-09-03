@@ -33,7 +33,7 @@ public class QuestionServiceImpl implements QuestionService {
         return questions;
     }
 
-    private List<Question> readQuestionsFromFile(List<Question> questions) {
+    private void readQuestionsFromFile(List<Question> questions) {
         InputStream inputStream = this.getClass().getResourceAsStream(this.questionsCsv);
         try (
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -54,7 +54,6 @@ public class QuestionServiceImpl implements QuestionService {
             e.printStackTrace();
         }
 
-        return questions;
     }
 
     private void parseOptions(String[] str, Question question) {
