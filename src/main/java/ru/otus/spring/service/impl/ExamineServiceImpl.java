@@ -5,83 +5,79 @@ import ru.otus.spring.domain.Question;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
-import ru.otus.spring.service.ExamineService;
-import ru.otus.spring.service.PrintService;
-import ru.otus.spring.service.QuestionService;
-
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicInteger;
+import ru.otus.spring.service.*;
 
 @Service
 @PropertySource("classpath:examine.properties")
 public class ExamineServiceImpl implements ExamineService {
     private final QuestionService questionService;
-    private final PrintService printService;
+    private final ExamMessageService examMessageService;
+    private final IOService ioService;
+    private final AnswerService answerService;
 
     private final int passingScore;
     private final int passingAttempts;
 
     public ExamineServiceImpl(
             QuestionService questionService,
-            PrintService printService,
+            ExamMessageService examMessageService,
+            IOService ioService,
+            AnswerService answerService,
             @Value("${examine.passing.score}") int passingScore,
             @Value("${examine.passing.attempts}") int passingAttempts
     ) {
         this.questionService = questionService;
-        this.printService = printService;
+        this.examMessageService = examMessageService;
+        this.ioService = ioService;
+        this.answerService = answerService;
         this.passingScore = passingScore;
         this.passingAttempts = passingAttempts;
     }
 
     @Override
-    public void conductExam(InputStream in, PrintStream out) {
+    public void conductExam() {
         for (int attempt = 1; attempt < this.passingAttempts + 1; attempt++) {
-            int result = conductExamAttempt(in, out);
+            int result = conductExamAttempt();
+
             if (result >= passingScore) {
-                printService.printResult(Constants.SUCCESS_RESULT, result, out);
+                examMessageService.printResult(Constants.SUCCESS_RESULT, result);
                 break;
             }
+
             if (attempt == passingAttempts) {
-                printService.printResult(Constants.FAILED_RESULT, result, out);
+                examMessageService.printResult(Constants.FAILED_RESULT, result);
             } else {
-                printService.printResult(Constants.ONE_MORE_ATTEMPT_RESULT, result, out);
+                examMessageService.printResult(Constants.ONE_MORE_ATTEMPT_RESULT, result);
             }
         }
     }
 
-    private int conductExamAttempt(InputStream in, PrintStream out) {
-        printService.printGreetings(out);
+    private int conductExamAttempt() {
+        examMessageService.printGreetings();
 
-        Scanner scanner = new Scanner(in);
-        if (scanner.nextLine().equals(Constants.START_COMMAND)) {
-            AtomicInteger rightAnswers = new AtomicInteger();
-            questionService.getQuestions().forEach(question -> {
-                printService.printQuestion(out, question);
+        if (ioService.readString().equals(Constants.START_COMMAND)) {
+            int rightAnswers = 0;
+            for (Question question : questionService.getQuestions()) {
+                examMessageService.printQuestion(question);
 
-                String answer = scanner.nextLine();
-
-                if (checkIsAnswerRight(question, answer)) {
-                    rightAnswers.getAndIncrement();
+                if (answerService.isAnswerRight(question, processAnswer(question.type))) {
+                    rightAnswers++;
                 }
-            });
+            }
 
-            return rightAnswers.get();
+            return rightAnswers;
+        } else {
+            return 0;
         }
-
-        return 0;
     }
 
-    private boolean checkIsAnswerRight(Question question, String answer) {
-        if (question.type.equals(Constants.MULTI_SELECT_QUESTION_TYPE)) {
-
-            return Arrays.equals(
-                    Arrays.stream(question.answers.split(";")).map(Integer::parseInt).sorted().toArray(),
-                    Arrays.stream(answer.split(";")).map(Integer::parseInt).sorted().toArray());
+    private String processAnswer(String questionType) {
+        String answer = ioService.readString();
+        if (answerService.isAnswerFormatValid(questionType, answer)) {
+            return answer;
         } else {
-            return question.answers.equals(answer);
+            examMessageService.printFormatError(questionType);
+            return processAnswer(questionType);
         }
     }
 }

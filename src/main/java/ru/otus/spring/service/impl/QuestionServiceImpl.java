@@ -6,6 +6,8 @@ import ru.otus.spring.domain.Question;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
+import ru.otus.spring.exceptions.ParseLongValueFromSourceException;
+import ru.otus.spring.exceptions.ReadQuestionException;
 import ru.otus.spring.service.QuestionService;
 
 import java.io.BufferedReader;
@@ -29,7 +31,6 @@ public class QuestionServiceImpl implements QuestionService {
         List<Question> questions = new ArrayList<>();
 
         readQuestionsFromFile(questions);
-
         return questions;
     }
 
@@ -39,21 +40,29 @@ public class QuestionServiceImpl implements QuestionService {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build()
                 ) {
-            String[] str;
-            while ((str = csvReader.readNext()) != null) {
-                Question question = new Question(
-                        Long.parseLong(str[0]),
-                        str[1],
-                        str[2]
-                );
-                parseOptions(str, question);
-                parseAnswers(str, question);
-                questions.add(question);
+            String[] fileString;
+            while ((fileString = csvReader.readNext()) != null) {
+                readQuestionFromFile(fileString, questions);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ReadQuestionException("Error in reading questions from file");
         }
 
+    }
+
+    private void readQuestionFromFile(String[] fileString, List<Question> readQuestions) {
+        try {
+            Question question = new Question(
+                    Long.parseLong(fileString[0]),
+                    fileString[1],
+                    fileString[2]
+            );
+            parseOptions(fileString, question);
+            parseAnswers(fileString, question);
+            readQuestions.add(question);
+        } catch (NumberFormatException e) {
+            throw new ParseLongValueFromSourceException("QuestionId cannot be parsed into Long");
+        }
     }
 
     private void parseOptions(String[] str, Question question) {

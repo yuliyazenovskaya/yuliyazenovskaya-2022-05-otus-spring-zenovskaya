@@ -12,7 +12,7 @@ public class Main {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Main.class);
 
         ExamineService examineService = context.getBean(ExamineService.class);
-        examineService.conductExam(System.in, System.out);
+        examineService.conductExam();
 
         context.close();
     }
