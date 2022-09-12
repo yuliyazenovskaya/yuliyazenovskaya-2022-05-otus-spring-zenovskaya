@@ -11,4 +11,6 @@ public class Constants {
     public static final String ONE_MORE_ATTEMPT_RESULT = "one more";
 
     public static final String START_COMMAND = "start";
+
+    public static final String NOT_ENOUGH_DATA_IN_FILE_EXCEPTION = "Not enough data in file";
 }

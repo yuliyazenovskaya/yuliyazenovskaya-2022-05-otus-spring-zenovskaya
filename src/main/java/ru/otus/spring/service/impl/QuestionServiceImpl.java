@@ -2,11 +2,11 @@ package ru.otus.spring.service.impl;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import ru.otus.spring.common.Constants;
 import ru.otus.spring.domain.Question;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
-import ru.otus.spring.exceptions.ParseLongValueFromSourceException;
+import ru.otus.spring.exceptions.ParseValuesException;
 import ru.otus.spring.exceptions.ReadQuestionException;
 import ru.otus.spring.service.QuestionService;
 
@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@PropertySource("classpath:examine.properties")
 public class QuestionServiceImpl implements QuestionService {
     private final String questionsCsv;
 
@@ -45,7 +44,7 @@ public class QuestionServiceImpl implements QuestionService {
                 readQuestionFromFile(fileString, questions);
             }
         } catch (IOException e) {
-            throw new ReadQuestionException("Error in reading questions from file");
+            throw new ReadQuestionException("Error in reading questions from file", e);
         }
 
     }
@@ -58,23 +57,35 @@ public class QuestionServiceImpl implements QuestionService {
                     fileString[2]
             );
             parseOptions(fileString, question);
-            parseAnswers(fileString, question);
+            parseRightAnswer(fileString, question);
             readQuestions.add(question);
         } catch (NumberFormatException e) {
-            throw new ParseLongValueFromSourceException("QuestionId cannot be parsed into Long");
+            throw new ParseValuesException("QuestionId cannot be parsed into Long", e);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ReadQuestionException(Constants.NOT_ENOUGH_DATA_IN_FILE_EXCEPTION, e);
         }
     }
 
     private void parseOptions(String[] str, Question question) {
-        List<String> options = new ArrayList<>();
-        for (int i = 3; i < 9; i++) {
-            if (str[i].equals("")) break;
-            options.add(str[i]);
+        try {
+            List<String> options = new ArrayList<>();
+            for (int i = 3; i < 9; i++) {
+                if (str[i].equals("")) break;
+                options.add(str[i]);
+            }
+            if (options.size() > 0) question.setOptions(options);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ReadQuestionException(Constants.NOT_ENOUGH_DATA_IN_FILE_EXCEPTION, e);
         }
-        if (options.size() > 0) question.options = options;
+
+
     }
 
-    private void parseAnswers(String[] str, Question question) {
-        question.answers = str[9];
+    private void parseRightAnswer(String[] str, Question question) {
+        try {
+            question.setRightAnswer(str[9]);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ReadQuestionException(Constants.NOT_ENOUGH_DATA_IN_FILE_EXCEPTION, e);
+        }
     }
 }
