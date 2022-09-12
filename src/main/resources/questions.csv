@@ -1,0 +1,6 @@
+id,type,text,option,option,option,option,option,option
+1,select,Choose the correct spelling of the word.,priveleged,privileged,privilleged,privelleged,,
+2,multiselect,Select all Russian emperors who ruled in the 18th century.,Catherine the First,Alexander the First,Anna Ioannovna,Peter the First,Elizabeth Petrovna,Alexander the Second
+3,number,Write the year of the beginning of the Great Patriotic War.,,,,,,
+4,select,Choose the main nihilist of Russian literature.,Onegin,Bazarov,Chatsky,Chichikov,,
+5,multiselect,Select all German car brands.,Audi,BMW,Renault,KIA,Opel,Daewoo
