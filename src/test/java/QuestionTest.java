@@ -14,12 +14,6 @@ public class QuestionTest {
         List<Question> questions = questionService.getQuestions();
 
         Assert.assertEquals(5, questions.size());
-
-        Assert.assertEquals(4, questions.get(0).getOptions().size());
-        Assert.assertEquals(6, questions.get(1).getOptions().size());
-        Assert.assertNull(questions.get(2).getOptions());
-        Assert.assertEquals(4, questions.get(3).getOptions().size());
-        Assert.assertEquals(6, questions.get(4).getOptions().size());
     }
 
 }

@@ -1,5 +1,6 @@
 package ru.otus.spring.service.impl;
 
+import ru.otus.spring.domain.ChoiceQuestion;
 import ru.otus.spring.domain.Question;
 import org.springframework.stereotype.Service;
 import ru.otus.spring.service.IOService;
@@ -16,10 +17,11 @@ public class QuestionPrinterServiceImpl implements QuestionPrinterService {
     @Override
     public void printQuestion(Question question) {
         ioService.printString(question.getId() + ". " + question.getText());
-        if (question.getOptions() != null) {
-            for (int counter = 0; counter < question.getOptions().size(); counter++) {
-                ioService.printString("    " + (counter + 1) + ". " + question.getOptions().get(counter));
-            }
+        if (question.getClass().getSimpleName().equals("ChoiceQuestion")) {
+            ((ChoiceQuestion) question).getOptions().forEach(option -> {
+                ioService.printString("    " + option.getNumber() + ". "
+                        + option.getText());
+            });
         }
     }
 }

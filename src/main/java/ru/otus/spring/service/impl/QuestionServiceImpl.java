@@ -3,6 +3,9 @@ package ru.otus.spring.service.impl;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import ru.otus.spring.common.Constants;
+import ru.otus.spring.domain.ChoiceQuestion;
+import ru.otus.spring.domain.FreeFormatQuestion;
+import ru.otus.spring.domain.Option;
 import ru.otus.spring.domain.Question;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,13 +30,12 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public List<Question> getQuestions() {
-        List<Question> questions = new ArrayList<>();
-
-        readQuestionsFromFile(questions);
-        return questions;
+        return readQuestionsFromFile();
     }
 
-    private void readQuestionsFromFile(List<Question> questions) {
+    private List<Question> readQuestionsFromFile() {
+        List<Question> questions = new ArrayList<>();
+
         InputStream inputStream = this.getClass().getResourceAsStream(this.questionsCsv);
         try (
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -41,24 +43,28 @@ public class QuestionServiceImpl implements QuestionService {
                 ) {
             String[] fileString;
             while ((fileString = csvReader.readNext()) != null) {
-                readQuestionFromFile(fileString, questions);
+                questions.add(readQuestionFromFile(fileString));
             }
         } catch (IOException e) {
             throw new ReadQuestionException("Error in reading questions from file", e);
         }
 
+        return questions;
     }
 
-    private void readQuestionFromFile(String[] fileString, List<Question> readQuestions) {
+    private Question readQuestionFromFile(String[] fileString) {
+        Question question;
         try {
-            Question question = new Question(
-                    Long.parseLong(fileString[0]),
-                    fileString[1],
-                    fileString[2]
-            );
-            parseOptions(fileString, question);
-            parseRightAnswer(fileString, question);
-            readQuestions.add(question);
+            String questionType = fileString[1];
+
+            if (questionType.equals(Constants.SINGLE_SELECT_QUESTION_TYPE)
+                    || questionType.equals(Constants.MULTI_SELECT_QUESTION_TYPE)) {
+                question = readChoiceQuestion(fileString);
+            } else {
+                question = readFreeFormatQuestion(fileString);
+            }
+
+            return question;
         } catch (NumberFormatException e) {
             throw new ParseValuesException("QuestionId cannot be parsed into Long", e);
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -66,24 +72,47 @@ public class QuestionServiceImpl implements QuestionService {
         }
     }
 
-    private void parseOptions(String[] str, Question question) {
+    private Question readChoiceQuestion(String[] fileString) {
+        ChoiceQuestion question = new ChoiceQuestion(
+                Long.parseLong(fileString[0]),
+                fileString[1],
+                fileString[2]
+        );
+        question.setOptions(parseOptions(fileString));
+
+        return question;
+    }
+
+    private Question readFreeFormatQuestion(String[] fileString) {
+        FreeFormatQuestion question = new FreeFormatQuestion(
+                Long.parseLong(fileString[0]),
+                fileString[1],
+                fileString[2]
+        );
+        question.setRightAnswer(parseRightAnswer(fileString));
+
+        return question;
+    }
+
+    private List<Option> parseOptions(String[] str) {
         try {
-            List<String> options = new ArrayList<>();
+            List<Option> options = new ArrayList<>();
             for (int i = 3; i < 9; i++) {
                 if (str[i].equals("")) break;
-                options.add(str[i]);
+                Option option = new Option(i - 2, str[i]);
+                option.setRight(str[9].contains(String.valueOf((i-2))));
+
+                options.add(option);
             }
-            if (options.size() > 0) question.setOptions(options);
+            return options;
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new ReadQuestionException(Constants.NOT_ENOUGH_DATA_IN_FILE_EXCEPTION, e);
         }
-
-
     }
 
-    private void parseRightAnswer(String[] str, Question question) {
+    private String parseRightAnswer(String[] str) {
         try {
-            question.setRightAnswer(str[9]);
+            return str[9];
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new ReadQuestionException(Constants.NOT_ENOUGH_DATA_IN_FILE_EXCEPTION, e);
         }
